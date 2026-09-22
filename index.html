@@ -447,22 +447,90 @@ let studentName='', studentClass='', scoreSaved=false;
 const SCORE_KEY='flipboxTrigonometriScoresV1';
 const grid=document.getElementById('grid');
 
+// Inisialisasi Supabase Client Cloud Database
+const SUPABASE_URL = 'https://jepccsutjoepjizlqhtx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_fRWX8w3dt5T6kiAkg_NoHg_nbmkWDQY';
+let supabaseClient = null;
+try {
+  if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch(err) {
+  console.warn('Gagal inisialisasi Supabase:', err);
+}
+
 function getScores(){
   try{return JSON.parse(localStorage.getItem(SCORE_KEY)||'[]');}catch(e){return [];}
 }
 function setScores(rows){localStorage.setItem(SCORE_KEY,JSON.stringify(rows));}
-function saveScore(score){
+
+async function saveScore(score){
   if(scoreSaved||!studentName)return;
+  scoreSaved=true;
+
+  // 1. Simpan ke localStorage sebagai cadangan offline
   const rows=getScores();
   rows.push({name:studentName,className:studentClass,score:Number(score),time:Date.now()});
-  setScores(rows); scoreSaved=true;
+  setScores(rows);
+
+  // 2. Kirim dan simpan ke Cloud Database Supabase secara online
+  if(supabaseClient){
+    try{
+      const { error } = await supabaseClient.from('scores').insert([{
+        name: studentName,
+        class_name: studentClass,
+        score: Number(score)
+      }]);
+      if(error) console.error('Supabase insert error:', error);
+      else console.log('Nilai berhasil disimpan ke Supabase!');
+    }catch(err){
+      console.warn('Koneksi Supabase gagal, tersimpan lokal:', err);
+    }
+  }
 }
-function renderScores(){
-  const rows=getScores().sort((a,b)=>b.score-a.score || a.time-b.time);
+
+async function renderScores(){
   const host=document.getElementById('scoreList');
-  if(!rows.length){host.innerHTML='<div class="emptyScores">Belum ada nilai siswa yang tersimpan.</div>';return;}
-  host.innerHTML=`<table class="scoreTable"><thead><tr><th>Ranking</th><th>Nama</th><th>Poin</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHTML(r.name)}</td><td>${formatScore(r.score)}</td></tr>`).join('')}</tbody></table>`;
+  host.innerHTML='<div class="emptyScores">Memuat data nilai dari cloud...</div>';
+
+  let rows = [];
+  // Ambil peringkat nilai live dari Supabase
+  if(supabaseClient){
+    try{
+      const { data, error } = await supabaseClient
+        .from('scores')
+        .select('*')
+        .order('score', { ascending: false })
+        .order('created_at', { ascending: true });
+      if(!error && data && data.length > 0){
+        rows = data.map(r => ({
+          name: r.name + (r.class_name ? ` (${r.class_name})` : ''),
+          score: r.score
+        }));
+      }
+    }catch(e){
+      console.warn('Gagal memuat dari Supabase, beralih ke lokal:', e);
+    }
+  }
+
+  // Jika sedang offline atau data cloud kosong, gunakan data lokal
+  if(!rows.length){
+    rows = getScores()
+      .sort((a,b)=>b.score-a.score || a.time-b.time)
+      .map(r => ({
+        name: r.name + (r.className ? ` (${r.className})` : ''),
+        score: r.score
+      }));
+  }
+
+  if(!rows.length){
+    host.innerHTML='<div class="emptyScores">Belum ada nilai siswa yang tersimpan.</div>';
+    return;
+  }
+
+  host.innerHTML=`<table class="scoreTable"><thead><tr><th>Ranking</th><th>Nama (Kelas)</th><th>Poin</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHTML(r.name)}</td><td>${formatScore(r.score)}</td></tr>`).join('')}</tbody></table>`;
 }
+
 function formatScore(x){return Number.isInteger(Number(x))?String(Number(x)):Number(x).toFixed(2).replace(/0+$/,'').replace(/\.$/,'');}
 function escapeHTML(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function openScores(){renderScores();document.getElementById('scoreOverlay').classList.add('show');}
