@@ -549,18 +549,21 @@ let latestCloudScores = [];
 async function downloadScoresCsv(){
   let dataToExport = latestCloudScores;
   if(!dataToExport || !dataToExport.length){
-    if(supabaseClient){
-      try {
-        const { data, error } = await supabaseClient
-          .from('scores')
-          .select('*')
-          .order('score', { ascending: false })
-          .order('created_at', { ascending: true });
-        if(!error && data && data.length > 0){
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=score.desc,created_at.asc`, {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        }
+      });
+      if(res.ok){
+        const data = await res.json();
+        if(Array.isArray(data) && data.length > 0){
           dataToExport = data;
         }
-      }catch(e){}
-    }
+      }
+    }catch(e){}
   }
   
   if(!dataToExport || !dataToExport.length){
@@ -578,10 +581,8 @@ async function downloadScoresCsv(){
     return;
   }
 
-  // Buat isi CSV (format yang rapi dibaca Microsoft Excel)
-  let csvContent = '\uFEFF'; // UTF-8 BOM agar Excel membaca karakter khusus dengan benar
-  csvContent += 'Ranking,Nama Siswa,Kelas,Nilai,Tanggal & Waktu (WIB)\r\n';
-  
+  // Buat file HTML Excel (.xls) berformat tabel rapi dengan garis border, background header, dan kolom teratur
+  let tableRows = '';
   dataToExport.forEach((r, idx) => {
     let tgl = '';
     try {
@@ -589,31 +590,93 @@ async function downloadScoresCsv(){
     } catch(err){
       tgl = r.created_at || '';
     }
-    const cleanName = `"${(r.name || '').replace(/"/g, '""')}"`;
-    const cleanClass = `"${(r.class_name || '').replace(/"/g, '""')}"`;
-    csvContent += `${idx + 1},${cleanName},${cleanClass},${r.score},"${tgl}"\r\n`;
+    tableRows += `
+      <tr style="text-align:left;">
+        <td style="border:1px solid #999;text-align:center;padding:6px;">${idx + 1}</td>
+        <td style="border:1px solid #999;padding:6px;">${escapeHTML(r.name || '')}</td>
+        <td style="border:1px solid #999;text-align:center;padding:6px;">${escapeHTML(r.class_name || '')}</td>
+        <td style="border:1px solid #999;text-align:center;font-weight:bold;padding:6px;">${formatScore(r.score)}</td>
+        <td style="border:1px solid #999;text-align:center;padding:6px;">${tgl}</td>
+      </tr>`;
   });
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const excelHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Rekap Nilai</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+    <style>
+      table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 11pt; }
+      th { background-color: #6c4ccf; color: #ffffff; border: 1px solid #5535b0; padding: 10px; text-align: center; }
+      td { border: 1px solid #cccccc; padding: 8px; }
+      .title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 15px; color: #242038; }
+    </style>
+  </head>
+  <body>
+    <div class="title">REKAPITULASI NILAI ASESMEN FLIP BOX TRIGONOMETRI</div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:70px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Ranking</th>
+          <th style="width:250px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Nama Siswa</th>
+          <th style="width:120px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Kelas</th>
+          <th style="width:100px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Nilai</th>
+          <th style="width:220px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Tanggal & Waktu Pengisian</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${tableRows}
+      </tbody>
+    </table>
+  </body>
+  </html>`;
+
+  const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   const now = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `Rekap_Nilai_Trigonometri_${now}.csv`;
+  a.download = `Rekap_Nilai_Trigonometri_${now}.xls`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
-function resetAllData(){
-  if(!confirm('Reset semua nilai dan data pengisian? Data yang dihapus tidak dapat dikembalikan.'))return;
+
+function promptResetScores(){
+  showConfirm(
+    'Konfirmasi Hapus Data',
+    'Apakah anda yakin akan menghapus semua nilai?',
+    executeResetScores
+  );
+}
+
+async function executeResetScores(){
+  // 1. Bersihkan localStorage
   localStorage.removeItem(SCORE_KEY);
-  studentName=''; studentClass='';
-  document.getElementById('studentName').value='';
-  document.getElementById('studentClass').value='';
+  latestCloudScores = [];
+  studentName = ''; 
+  studentClass = '';
+  document.getElementById('studentName').value = '';
+  document.getElementById('studentClass').value = '';
   document.getElementById('formError').classList.remove('show');
+
+  // 2. Hapus seluruh data di tabel Supabase
+  try {
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?id=gt.0`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': `Bearer ${SUPABASE_KEY}`
+      }
+    });
+  } catch(e) {
+    console.warn('Gagal menghapus data di Supabase:', e);
+  }
+
+  // 3. Render ulang tampilan skor (menjadi kosong)
   renderScores();
 }
+
 function render(){grid.innerHTML='';deck.forEach((c,i)=>{let d=document.createElement('div');let resultClass=c.done?(c.answered===c.q.a?' answer-correct':' answer-wrong'):'';d.className='card'+(opened.includes(i)?' flipped':'')+(c.matched?' matched':'')+(c.done?' done':'')+resultClass;d.innerHTML=`<div class="inner"><div class="face front">?</div><div class="face back">${c.fruit}</div></div>`;d.onpointerdown=()=>playSound('click');d.onclick=()=>pick(i);grid.appendChild(d)});}
 function pick(i){let c=deck[i];if(finished&&!document.body.classList.contains('review-mode'))return;if(c.done){showQuestion(i,true);return;}if(document.body.classList.contains('review-mode'))return;if(opened.includes(i)||opened.length>=2)return;pendingCard=i;showQuestion(i,false);}
 function showQuestion(i,review=false){let c=deck[i],ov=document.getElementById('overlay');document.getElementById('qnum').textContent=`Soal ${c.q.id}${review?' • Sudah dikerjakan':` • ${done+1}/16`}`;let back=document.getElementById('fruitBadge');back.textContent='Kembali';back.style.cursor='pointer';back.onclick=()=>closeQuestion();let qi=document.getElementById('qimage');if(c.q.img){qi.innerHTML=c.q.img;qi.style.display='block';}else{qi.innerHTML='';qi.style.display='none';}document.getElementById('question').innerHTML=c.q.q;let opts=document.getElementById('options');opts.innerHTML='';let ex=document.getElementById('explain');ex.style.display='none';let nx=document.getElementById('next');nx.style.display='none';c.q.o.forEach((x,j)=>{let b=document.createElement('button');b.className='opt';b.innerHTML='<b>'+String.fromCharCode(65+j)+'.</b> '+x;if(review){b.classList.add('locked');if(j===c.q.a)b.classList.add('correct');if(c.answered===j && j!==c.q.a)b.classList.add('wrong');}else{b.dataset.sound=(j===c.q.a?'correct':'wrong');b.onclick=()=>answer(j,b,i);}opts.appendChild(b)});if(review){ex.innerHTML='<b>Pembahasan:</b> '+c.q.e;ex.style.display='block';}ov.classList.add('show');}
@@ -709,7 +772,7 @@ document.getElementById('passwordOverlay').addEventListener('click',(e)=>{if(e.t
 document.getElementById('scorePassword').addEventListener('keydown',(e)=>{if(e.key==='Enter')verifyScorePassword();});
 document.getElementById('closeScore').addEventListener('click',closeScores);
 document.getElementById('scoreOverlay').addEventListener('click',(e)=>{if(e.target.id==='scoreOverlay')closeScores();});
-document.getElementById('resetScores').addEventListener('click',resetAllData);
+document.getElementById('resetScores').addEventListener('click',promptResetScores);
 document.getElementById('downloadScores').addEventListener('click',downloadScoresCsv);
 document.getElementById('studentName').addEventListener('input',()=>document.getElementById('formError').classList.remove('show'));
 document.getElementById('studentClass').addEventListener('input',()=>document.getElementById('formError').classList.remove('show'));
