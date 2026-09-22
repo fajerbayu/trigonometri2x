@@ -652,18 +652,25 @@ function promptResetScores(){
 }
 
 async function executeResetScores(){
-  // 1. Bersihkan localStorage
+  // 1. Kosongkan tampilan papan nilai secara instan di layar
+  const host = document.getElementById('scoreList');
+  if(host) host.innerHTML = '<div class="emptyScores">Menghapus seluruh data nilai...</div>';
+  
+  // 2. Bersihkan penyimpanan lokal & memori cache
   localStorage.removeItem(SCORE_KEY);
   latestCloudScores = [];
   studentName = ''; 
   studentClass = '';
-  document.getElementById('studentName').value = '';
-  document.getElementById('studentClass').value = '';
-  document.getElementById('formError').classList.remove('show');
+  const elName = document.getElementById('studentName');
+  const elClass = document.getElementById('studentClass');
+  if(elName) elName.value = '';
+  if(elClass) elClass.value = '';
+  const elErr = document.getElementById('formError');
+  if(elErr) elErr.classList.remove('show');
 
-  // 2. Hapus seluruh data di tabel Supabase
+  // 3. Hapus seluruh data di tabel Cloud Supabase
   try {
-    await fetch(`${SUPABASE_URL}/rest/v1/scores?id=gt.0`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/scores?id=neq.0`, {
       method: 'DELETE',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -671,11 +678,11 @@ async function executeResetScores(){
       }
     });
   } catch(e) {
-    console.warn('Gagal menghapus data di Supabase:', e);
+    console.warn('Kendala jaringan saat menghapus Supabase:', e);
   }
 
-  // 3. Render ulang tampilan skor (menjadi kosong)
-  renderScores();
+  // 4. Perbarui tampilan menjadi benar-benar kosong
+  if(host) host.innerHTML = '<div class="emptyScores">Belum ada nilai siswa yang tersimpan.</div>';
 }
 
 function render(){grid.innerHTML='';deck.forEach((c,i)=>{let d=document.createElement('div');let resultClass=c.done?(c.answered===c.q.a?' answer-correct':' answer-wrong'):'';d.className='card'+(opened.includes(i)?' flipped':'')+(c.matched?' matched':'')+(c.done?' done':'')+resultClass;d.innerHTML=`<div class="inner"><div class="face front">?</div><div class="face back">${c.fruit}</div></div>`;d.onpointerdown=()=>playSound('click');d.onclick=()=>pick(i);grid.appendChild(d)});}
