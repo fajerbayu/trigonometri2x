@@ -7,7 +7,7 @@
 :root{--bg:#f5f0ff;--purple:#6c4ccf;--purple2:#8d6be8;--ink:#242038;--ok:#198754;--bad:#d33;--card:#fff;--gold:#f4b942}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,system-ui,Arial,sans-serif;background:linear-gradient(145deg,#eee6ff,#fff);color:var(--ink);min-height:100vh;display:flex;justify-content:center;padding:14px}
 .phone{width:min(100%,430px);min-height:calc(100vh - 28px);background:#fbfaff;border:1px solid #ddd3f6;border-radius:30px;box-shadow:0 20px 55px #4e398333;overflow:hidden;position:relative}
-header{background:linear-gradient(135deg,var(--purple),#9675ef);color:#fff;padding:20px 18px 15px}.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.brand{font-weight:900;font-size:20px}.timer{font-variant-numeric:tabular-nums;background:#ffffff20;border:1px solid #ffffff45;border-radius:14px;padding:8px 11px;font-weight:800}.sub{opacity:.9;font-size:12px;margin-top:4px}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:13px}.stat{background:#ffffff18;border-radius:12px;padding:8px;text-align:center;font-size:11px}.stat b{display:block;font-size:16px;margin-top:2px}
+header{background:linear-gradient(135deg,var(--purple),#9675ef);color:#fff;padding:20px 18px 15px}.top{display:flex;justify-content:space-between;gap:8px;align-items:center}.brand{font-weight:900;font-size:20px}.timer{font-variant-numeric:tabular-nums;background:#ffffff20;border:1px solid #ffffff45;border-radius:14px;padding:8px 11px;font-weight:800}.sub{opacity:.9;font-size:12px;margin-top:4px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:13px}.stat{background:#ffffff18;border-radius:12px;padding:8px;text-align:center;font-size:11px}.stat b{display:block;font-size:16px;margin-top:2px}
 main{padding:15px}.note{font-size:12px;line-height:1.45;background:#fff5cf;border:1px solid #f3dd83;padding:10px 11px;border-radius:13px;margin-bottom:13px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}.card{aspect-ratio:1/1.13;perspective:700px;cursor:pointer}.inner{width:100%;height:100%;position:relative;transform-style:preserve-3d;transition:.45s}.card.flipped .inner,.card.matched .inner{transform:rotateY(180deg)}.face{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;box-shadow:0 4px 10px #38276918}.front{background:linear-gradient(145deg,#7656d9,#9d82ef);color:white;font-size:25px;font-weight:900;border:2px solid #fff}.back{background:#fff;transform:rotateY(180deg);font-size:35px;border:2px solid #e9e2fa}.matched .back{border:3px solid #45b97c;background:#eafff3}.done .front{opacity:1}
 .card.answer-correct .front{background:linear-gradient(145deg,#198754,#43b77a)!important;border-color:#dff7e9!important;color:#fff!important}
 .card.answer-wrong .front{background:linear-gradient(145deg,#c93645,#e86773)!important;border-color:#ffe1e4!important;color:#fff!important}
@@ -337,7 +337,7 @@ body.review-mode .card:not(.done){
 <!-- gerak flip -->
 <path d="M54 28c5-5 8-6 13-6" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round"/>
 <path d="M62 17l6 5-7 3" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-</svg></div><h1>Flip Box Trigonometri</h1><p>Tunggu instruksi guru, kemudian tekan tombol Mulai Permainan secara bersama-sama.</p><div class="startInfo"><div class="startInfoTitle">Petunjuk Permainan</div><ol><li>Terdapat 16 kartu dan 16 soal pilihan ganda.</li><li>Jawab soal untuk membuka setiap kartu.</li><li>Jawaban benar secara beruntun membentuk <b>streak</b> dan memberikan bonus <b>+2 poin</b> mulai dari jawaban benar kedua berturut-turut.</li><li>Waktu pengerjaan adalah <b>30 menit</b>.</li><li>Timer berjalan setelah tombol <b>Mulai Permainan</b> ditekan.</li></ol></div><button class="startBtn" id="startBtn">▶ Mulai Permainan</button><div class="startHint">Tekan tombol hanya setelah guru memberikan aba-aba mulai.</div></section>
+</svg></div><h1>Flip Box Trigonometri</h1><p>Tunggu instruksi guru, kemudian tekan tombol Mulai Permainan secara bersama-sama.</p><div class="startInfo"><div class="startInfoTitle">Petunjuk Permainan</div><ol><li>Terdapat 16 kartu dan 16 soal pilihan ganda.</li><li>Jawab soal untuk membuka setiap kartu.</li><li>Jawaban benar beruntun membentuk <b>streak</b> dan memberikan bonus <b>+0,5 poin</b> (maksimal bonus +5,0 poin).</li><li>Mencocokkan 2 kartu buah yang sama dan keduanya benar memberikan <b>1 Bantuan 50:50</b> (menghapus 2 opsi salah).</li><li>Waktu pengerjaan adalah <b>30 menit</b>.</li><li>Timer berjalan setelah tombol <b>Mulai Permainan</b> ditekan.</li></ol></div><button class="startBtn" id="startBtn">▶ Mulai Permainan</button><div class="startHint">Tekan tombol hanya setelah guru memberikan aba-aba mulai.</div></section>
 <div id="playArea" class="hidden">
 <header><div class="top"><div><div class="brand"><svg class="flipLogoSvg" viewBox="0 0 120 96" aria-hidden="true">
 <defs>
@@ -371,8 +371,8 @@ body.review-mode .card:not(.done){
 <!-- gerak flip -->
 <path d="M54 28c5-5 8-6 13-6" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round"/>
 <path d="M62 17l6 5-7 3" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-</svg><span>Flip Box Trigonometri</span></div><div class="sub">Bangun streak jawaban benar!</div><div class="participantTag" id="participantTag"></div></div><div class="timer" id="timer">30:00</div></div><div class="stats"><div class="stat">Soal selesai<b id="done">0/16</b></div><div class="stat">Benar<b id="correct">0</b></div><div class="stat">Bonus streak<b id="bonus">0</b></div></div></header>
-<main id="game"><div class="note"><b>Aturan:</b> klik satu kartu lalu jawab soal. Kartu akan menjadi <b>hijau</b> jika jawaban benar dan <b>merah</b> jika salah. Setiap jawaban benar yang berlanjut setelah satu jawaban benar sebelumnya memperoleh <b>bonus streak +2 poin</b>. Jawaban salah memutus streak. Semua 16 kartu memiliki satu soal.</div><div class="grid" id="grid"></div><div class="gameNav"><button id="menuBtn" class="gameNavBtn secondary">Menu Utama</button><button id="finishEarlyBtn" class="gameNavBtn primary">Selesai</button></div></main>
+</svg><span>Flip Box Trigonometri</span></div><div class="sub">Bangun streak jawaban benar!</div><div class="participantTag" id="participantTag"></div></div><div class="timer" id="timer">30:00</div></div><div class="stats"><div class="stat">Selesai<b id="done">0/16</b></div><div class="stat">Benar<b id="correct">0</b></div><div class="stat">Streak<b id="bonus">+0.0</b></div><div class="stat">Bantuan<b id="statLifeline">🎯 0</b></div></div></header>
+<main id="game"><div class="note"><b>Aturan:</b> klik kartu lalu jawab soal. Benar beruntun memberi <b>bonus streak +0,5 poin</b> (maks. +5 poin). Pasangan buah cocok & benar memberi <b>1 Bantuan 50:50</b>.</div><div class="grid" id="grid"></div><div class="gameNav"><button id="menuBtn" class="gameNavBtn secondary">Menu Utama</button><button id="finishEarlyBtn" class="gameNavBtn primary">Selesai</button></div></main>
 <section class="finish" id="finish"><div style="font-size:55px">🏆</div><h2>Asesmen Selesai!</h2><div class="finishName" id="finishName"></div><p>Nilai akhir kamu:</p><div class="scoreCircle" id="circle" style="--p:0%"><span id="finalScore">0</span></div><div class="break" id="breakdown"></div><div class="finishActions"><button class="restart reviewBtn" id="reviewFlipBtn">Kembali</button><button class="restart" id="restartBtn">Menu Utama</button></div></section>
 </div></div>
 <div class="learningOverlay" id="learningOverlay"><div class="learningModal"><h3>🎯 Tujuan Pembelajaran</h3><p>Setelah mengikuti pembelajaran, peserta didik dapat:</p><ol><li>Menentukan hubungan dan konversi radian dan derajat dengan tepat.</li><li>Menentukan nilai perbandingan trigonometri pada segitiga siku-siku.</li><li>Menyelesaikan soal ukuran sudut dan perbandingan trigonometri secara tepat.</li></ol><div class="learningActions"><button id="learningBack">Kembali</button></div></div></div>
@@ -392,7 +392,7 @@ body.review-mode .card:not(.done){
   </div>
 </div>
 <div class="scoreOverlay" id="scoreOverlay"><div class="scoreModal"><div class="scoreModalHead"><h3>🏆 Nilai Siswa</h3><button class="closeScore" id="closeScore" aria-label="Tutup">×</button></div><div id="scoreList"></div><div class="scoreActionsGrid"><button class="downloadScores" id="downloadScores">📥 Unduh Excel (.csv)</button><button class="resetScores" id="resetScores">Reset Nilai</button></div></div></div>
-<div class="overlay" id="overlay"><div class="modal"><div class="qhead"><span class="badge" id="qnum">Soal</span><span class="badge" id="fruitBadge">🍎</span></div><div class="qimage" id="qimage"></div><div class="question" id="question"></div><div class="options" id="options"></div><div class="explain" id="explain"></div><button class="next" id="next">Lanjutkan</button></div></div>
+<div class="overlay" id="overlay"><div class="modal"><div class="qhead"><span class="badge" id="qnum">Soal</span><div style="display:flex;gap:6px;align-items:center"><button type="button" class="lifelineBtn" id="use5050Btn" title="Gunakan Bantuan 50:50">🎯 50:50 (<span id="lifelineCount">0</span>)</button><span class="badge" id="fruitBadge">🍎</span></div></div><div class="qimage" id="qimage"></div><div class="question" id="question"></div><div class="options" id="options"></div><div class="explain" id="explain"></div><button class="next" id="next">Lanjutkan</button></div></div>
 <script>
 // Sound effects embedded directly in this HTML so the game stays portable.
 const SOUND_DATA = {
@@ -448,8 +448,59 @@ function shuffleArray(arr){const a=[...arr];for(let i=a.length-1;i>0;i--){const 
 function randomizeOptions(q){const x=shuffleArray(q.o.map((text,i)=>({text,correct:i===q.a})));return {...q,o:x.map(v=>v.text),a:x.findIndex(v=>v.correct)};}
 const fruits=['🍎','🍌','🍇','🍊'];
 const randomizedQuestions=shuffleArray(Q).map(randomizeOptions);
-let deck=shuffleArray([...fruits,...fruits,...fruits,...fruits]).map((fruit,i)=>({fruit,q:randomizedQuestions[i],i,done:false,matched:false,answered:null}));
-let opened=[], done=0, correct=0, bonus=0, streak=0, pendingCard=null, time=30*60, finished=false, started=false, timerId=null;
+let deck=shuffleArray([...fruits,...fruits,...fruits,...fruits]).map((fruit,i)=>({fruit,q:randomizedQuestions[i],i,done:false,matched:false,answered:null,used5050:false,eliminatedOpts:[]}));
+let opened=[], done=0, correct=0, bonus=0, streak=0, lifelines5050=0, pendingCard=null, time=30*60, finished=false, started=false, timerId=null;
+
+function updateLifelineUI(){
+  const statEl=document.getElementById('statLifeline');
+  if(statEl) statEl.textContent='🎯 '+lifelines5050;
+  const countEl=document.getElementById('lifelineCount');
+  if(countEl) countEl.textContent=lifelines5050;
+  const btn=document.getElementById('use5050Btn');
+  if(btn){
+    if(pendingCard!==null){
+      const c=deck[pendingCard];
+      btn.disabled=lifelines5050<=0 || c.used5050 || c.done || document.body.classList.contains('review-mode');
+    } else {
+      btn.disabled=lifelines5050<=0;
+    }
+  }
+}
+
+function showPairRewardToast(fruit){
+  playSound('correct');
+  let toast=document.getElementById('pairToast');
+  if(!toast){
+    toast=document.createElement('div');
+    toast.id='pairToast';
+    toast.className='pairToast';
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML=`<span style="font-size:22px">${fruit}</span> <b>Perfect Match!</b><br><small>Dapat 1 Bantuan 50:50! 🎯</small>`;
+  toast.classList.add('show');
+  setTimeout(()=>toast.classList.remove('show'),2500);
+}
+
+function use5050(i){
+  let c=deck[i];
+  if(lifelines5050<=0 || c.used5050 || c.done) return;
+  c.used5050=true;
+  lifelines5050--;
+  updateLifelineUI();
+  playSound('click');
+
+  let wrongIndices=[];
+  c.q.o.forEach((_,idx)=>{if(idx!==c.q.a) wrongIndices.push(idx);});
+  let shuffled=shuffleArray(wrongIndices);
+  c.eliminatedOpts=shuffled.slice(0,2);
+
+  let optBtns=document.getElementById('options').querySelectorAll('.opt');
+  c.eliminatedOpts.forEach(idx=>{
+    if(optBtns[idx]){
+      optBtns[idx].classList.add('eliminated');
+    }
+  });
+}
 let studentName='', studentClass='', scoreSaved=false;
 const SCORE_KEY='flipboxTrigonometriScoresV1';
 const grid=document.getElementById('grid');
@@ -691,12 +742,110 @@ async function executeResetScores(){
 
 function render(){grid.innerHTML='';deck.forEach((c,i)=>{let d=document.createElement('div');let resultClass=c.done?(c.answered===c.q.a?' answer-correct':' answer-wrong'):'';d.className='card'+(opened.includes(i)?' flipped':'')+(c.matched?' matched':'')+(c.done?' done':'')+resultClass;d.innerHTML=`<div class="inner"><div class="face front">?</div><div class="face back">${c.fruit}</div></div>`;d.onpointerdown=()=>playSound('click');d.onclick=()=>pick(i);grid.appendChild(d)});}
 function pick(i){let c=deck[i];if(finished&&!document.body.classList.contains('review-mode'))return;if(c.done){showQuestion(i,true);return;}if(document.body.classList.contains('review-mode'))return;if(opened.includes(i)||opened.length>=2)return;pendingCard=i;showQuestion(i,false);}
-function showQuestion(i,review=false){let c=deck[i],ov=document.getElementById('overlay');document.getElementById('qnum').textContent=`Soal ${c.q.id}${review?' • Sudah dikerjakan':` • ${done+1}/16`}`;let back=document.getElementById('fruitBadge');back.textContent='Kembali';back.style.cursor='pointer';back.onclick=()=>closeQuestion();let qi=document.getElementById('qimage');if(c.q.img){qi.innerHTML=c.q.img;qi.style.display='block';}else{qi.innerHTML='';qi.style.display='none';}document.getElementById('question').innerHTML=c.q.q;let opts=document.getElementById('options');opts.innerHTML='';let ex=document.getElementById('explain');ex.style.display='none';let nx=document.getElementById('next');nx.style.display='none';c.q.o.forEach((x,j)=>{let b=document.createElement('button');b.className='opt';b.innerHTML='<b>'+String.fromCharCode(65+j)+'.</b> '+x;if(review){b.classList.add('locked');if(j===c.q.a)b.classList.add('correct');if(c.answered===j && j!==c.q.a)b.classList.add('wrong');}else{b.dataset.sound=(j===c.q.a?'correct':'wrong');b.onclick=()=>answer(j,b,i);}opts.appendChild(b)});if(review){ex.innerHTML='<b>Pembahasan:</b> '+c.q.e;ex.style.display='block';}ov.classList.add('show');}
+function showQuestion(i,review=false){
+  let c=deck[i],ov=document.getElementById('overlay');
+  document.getElementById('qnum').textContent=`Soal ${c.q.id}${review?' • Sudah dikerjakan':` • ${done+1}/16`}`;
+  let back=document.getElementById('fruitBadge');
+  back.textContent='Kembali';
+  back.style.cursor='pointer';
+  back.onclick=()=>closeQuestion();
+  let qi=document.getElementById('qimage');
+  if(c.q.img){qi.innerHTML=c.q.img;qi.style.display='block';}else{qi.innerHTML='';qi.style.display='none';}
+  document.getElementById('question').innerHTML=c.q.q;
+  let btn5050=document.getElementById('use5050Btn');
+  if(btn5050){
+    if(review || c.done){
+      btn5050.style.display='none';
+    }else{
+      btn5050.style.display='inline-flex';
+      btn5050.disabled=lifelines5050<=0 || c.used5050;
+      btn5050.onclick=()=>use5050(i);
+    }
+  }
+  let opts=document.getElementById('options');
+  opts.innerHTML='';
+  let ex=document.getElementById('explain');
+  ex.style.display='none';
+  let nx=document.getElementById('next');
+  nx.style.display='none';
+  c.q.o.forEach((x,j)=>{
+    let b=document.createElement('button');
+    b.className='opt'+(c.eliminatedOpts&&c.eliminatedOpts.includes(j)?' eliminated':'');
+    b.innerHTML='<b>'+String.fromCharCode(65+j)+'.</b> '+x;
+    if(review){
+      b.classList.add('locked');
+      if(j===c.q.a)b.classList.add('correct');
+      if(c.answered===j && j!==c.q.a)b.classList.add('wrong');
+    }else{
+      b.dataset.sound=(j===c.q.a?'correct':'wrong');
+      b.onclick=()=>answer(j,b,i);
+    }
+    opts.appendChild(b);
+  });
+  if(review){ex.innerHTML='<b>Pembahasan:</b> '+c.q.e;ex.style.display='block';}
+  updateLifelineUI();
+  ov.classList.add('show');
+}
 function closeQuestion(){document.getElementById('overlay').classList.remove('show');pendingCard=null;}
-function answer(j,b,i){let c=deck[i];c.answered=j;document.querySelectorAll('.opt').forEach((x,k)=>{x.classList.add('locked');if(k===c.q.a)x.classList.add('correct')});if(j===c.q.a){correct++;streak++;if(streak>=2){bonus+=2;document.getElementById('bonus').textContent=bonus;}}else{streak=0;b.classList.add('wrong');}document.getElementById('correct').textContent=correct;let ex=document.getElementById('explain');ex.innerHTML='<b>Pembahasan:</b> '+c.q.e+(j===c.q.a?(streak>=2?'<br><b>🔥 Streak '+streak+' — bonus +2 poin.</b>':'<br><b>🔥 Streak dimulai.</b>'):'<br><b>Streak terputus.</b>');ex.style.display='block';let nx=document.getElementById('next');nx.style.display='block';nx.onclick=()=>completeCard(i);}
+function answer(j,b,i){
+  let c=deck[i];
+  c.answered=j;
+  document.querySelectorAll('.opt').forEach((x,k)=>{x.classList.add('locked');if(k===c.q.a)x.classList.add('correct');});
+  if(j===c.q.a){
+    correct++;
+    streak++;
+    if(streak>=2){
+      if(bonus<5.0){
+        bonus=Math.min(5.0, Math.round((bonus+0.5)*10)/10);
+      }
+      document.getElementById('bonus').textContent='+'+bonus.toFixed(1);
+    }
+  }else{
+    streak=0;
+    b.classList.add('wrong');
+  }
+  document.getElementById('correct').textContent=correct;
+  let ex=document.getElementById('explain');
+  ex.innerHTML='<b>Pembahasan:</b> '+c.q.e+(j===c.q.a?(streak>=2?`<br><b>🔥 Streak ${streak} — bonus +0.5 poin (Total: +${bonus.toFixed(1)}/5.0).</b>`:'<br><b>🔥 Streak dimulai.</b>'):'<br><b>Streak terputus.</b>');
+  ex.style.display='block';
+  let nx=document.getElementById('next');
+  nx.style.display='block';
+  nx.onclick=()=>completeCard(i);
+  updateLifelineUI();
+}
 function completeCard(i){document.getElementById('overlay').classList.remove('show');let c=deck[i];c.done=true;done++;opened.push(i);document.getElementById('done').textContent=done+'/16';render();if(opened.length===2){setTimeout(checkPair,650);}if(done===16 && opened.length<2)setTimeout(endGame,500);}
-function checkPair(){let [a,b]=opened;if(deck[a].fruit===deck[b].fruit){deck[a].matched=deck[b].matched=true;}opened=[];render();if(done===16)setTimeout(endGame,500);}
-function endGame(){if(finished)return;finished=true;document.getElementById('game').style.display='none';document.getElementById('finish').style.display='block';let base=(correct/16)*100;let score;if(correct===16){score=100;}else{score=Math.min(98,Math.round((base+bonus)*100)/100);}saveScore(score);document.getElementById('finishName').textContent=studentName+' • '+studentClass;document.getElementById('finalScore').textContent=formatScore(score);document.getElementById('circle').style.setProperty('--p',score+'%');document.getElementById('breakdown').innerHTML=`Jawaban benar: <b>${correct}/16</b><br>Nilai dasar: <b>${base.toFixed(2)}</b><br>Bonus streak: <b>${bonus.toFixed(0)}</b> poin<br>Nilai akhir: <b>${formatScore(score)}/100</b>${correct<16?' <br><small>Nilai maksimal 98 jika masih ada jawaban yang salah.</small>':''}`;}
+function checkPair(){
+  let [a,b]=opened;
+  if(deck[a].fruit===deck[b].fruit){
+    deck[a].matched=deck[b].matched=true;
+    if(deck[a].answered===deck[a].q.a && deck[b].answered===deck[b].q.a){
+      lifelines5050++;
+      updateLifelineUI();
+      showPairRewardToast(deck[a].fruit);
+    }
+  }
+  opened=[];
+  render();
+  if(done===16)setTimeout(endGame,500);
+}
+function endGame(){
+  if(finished)return;
+  finished=true;
+  document.getElementById('game').style.display='none';
+  document.getElementById('finish').style.display='block';
+  let base=(correct/16)*100;
+  let score;
+  if(correct===16){
+    score=100;
+  }else{
+    score=Math.min(98, Math.round((base+bonus)*100)/100);
+  }
+  saveScore(score);
+  document.getElementById('finishName').textContent=studentName+' • '+studentClass;
+  document.getElementById('finalScore').textContent=formatScore(score);
+  document.getElementById('circle').style.setProperty('--p',score+'%');
+  document.getElementById('breakdown').innerHTML=`Jawaban benar: <b>${correct}/16</b><br>Nilai dasar: <b>${base.toFixed(2)}</b><br>Bonus streak: <b>+${bonus.toFixed(1)}</b> poin (maks. 5.0)<br>Nilai akhir: <b>${formatScore(score)}/100</b>${correct<16?' <br><small>Nilai maksimal 98 jika masih ada jawaban yang salah.</small>':''}`;
+}
 
 let confirmAction=null;
 function showConfirm(title,text,action){
@@ -790,4 +939,5 @@ document.getElementById('studentName').addEventListener('input',()=>document.get
 document.getElementById('studentClass').addEventListener('input',()=>document.getElementById('formError').classList.remove('show'));
 document.getElementById('restartBtn').addEventListener('click',()=>location.reload());
 render();
+updateLifelineUI();
 </script></body></html>
