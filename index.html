@@ -563,14 +563,67 @@ async function saveScore(score){
   }
 }
 
+// Fungsi untuk menyaring HANYA percobaan pertama (first attempt) per siswa
+function getFirstAttempts(scoresList){
+  const sorted = [...scoresList].sort((a,b)=>{
+    const tA = new Date(a.created_at || a.time || 0).getTime();
+    const tB = new Date(b.created_at || b.time || 0).getTime();
+    return tA - tB;
+  });
+
+  const studentMap = new Map();
+  sorted.forEach(row => {
+    const rawName = (row.name || '').trim();
+    const rawClass = (row.class_name || row.className || '').trim();
+    if(!rawName) return;
+    const key = rawName.toLowerCase() + '___' + rawClass.toLowerCase();
+
+    if(!studentMap.has(key)){
+      studentMap.set(key, {
+        name: rawName,
+        className: rawClass,
+        score: Number(row.score),
+        created_at: row.created_at || (row.time ? new Date(row.time).toISOString() : new Date().toISOString()),
+        drillCount: 1
+      });
+    } else {
+      studentMap.get(key).drillCount++;
+    }
+  });
+
+  return Array.from(studentMap.values()).sort((a,b)=>{
+    if(b.score !== a.score) return b.score - a.score;
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  });
+}
+
+function checkStudentPreviousAttempt(name, className){
+  const normName = (name || '').trim().toLowerCase();
+  const normClass = (className || '').trim().toLowerCase();
+
+  let records = [];
+  if(Array.isArray(latestCloudScores) && latestCloudScores.length > 0){
+    records = latestCloudScores.filter(r => (r.name||'').trim().toLowerCase() === normName && ((r.class_name||'').trim().toLowerCase() === normClass || !normClass));
+  } else {
+    records = getScores().filter(r => (r.name||'').trim().toLowerCase() === normName && ((r.className||'').trim().toLowerCase() === normClass || !normClass));
+  }
+
+  if(records.length === 0){
+    return { isFirst: true, firstScore: null, attemptNumber: 1 };
+  } else {
+    records.sort((a,b) => new Date(a.created_at || a.time || 0).getTime() - new Date(b.created_at || b.time || 0).getTime());
+    return { isFirst: false, firstScore: Number(records[0].score), attemptNumber: records.length + 1 };
+  }
+}
+
 async function renderScores(){
   const host=document.getElementById('scoreList');
   host.innerHTML='<div class="emptyScores">Memuat data nilai dari cloud...</div>';
 
-  let rows = [];
-  // Ambil peringkat seluruh siswa dari Supabase secara langsung via REST API
+  let rawData = [];
+  // Ambil seluruh riwayat pengisian dari Supabase secara langsung via REST API
   try{
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=score.desc,created_at.asc`, {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=created_at.asc`, {
       method: 'GET',
       headers: {
         'apikey': SUPABASE_KEY,
@@ -581,10 +634,7 @@ async function renderScores(){
       const data = await res.json();
       if(Array.isArray(data) && data.length > 0){
         latestCloudScores = data;
-        rows = data.map(r => ({
-          name: r.name + (r.class_name ? ` (${r.class_name})` : ''),
-          score: r.score
-        }));
+        rawData = data;
       }
     }
   }catch(e){
@@ -592,21 +642,47 @@ async function renderScores(){
   }
 
   // Fallback ke data lokal jika koneksi offline atau data cloud masih kosong
-  if(!rows.length){
-    rows = getScores()
-      .sort((a,b)=>b.score-a.score || a.time-b.time)
-      .map(r => ({
-        name: r.name + (r.className ? ` (${r.className})` : ''),
-        score: r.score
-      }));
+  if(!rawData.length){
+    rawData = getScores().map(r => ({
+      name: r.name,
+      class_name: r.className || '',
+      score: r.score,
+      created_at: r.time ? new Date(r.time).toISOString() : new Date().toISOString()
+    }));
   }
 
-  if(!rows.length){
+  if(!rawData.length){
     host.innerHTML='<div class="emptyScores">Belum ada nilai siswa yang tersimpan.</div>';
     return;
   }
 
-  host.innerHTML=`<table class="scoreTable"><thead><tr><th>Ranking</th><th>Nama (Kelas)</th><th>Poin</th></tr></thead><tbody>${rows.map((r,i)=>`<tr><td>${i+1}</td><td>${escapeHTML(r.name)}</td><td>${formatScore(r.score)}</td></tr>`).join('')}</tbody></table>`;
+  // Saring HANYA percobaan pertama setiap siswa sebagai nilai resmi
+  const officialList = getFirstAttempts(rawData);
+
+  host.innerHTML=`
+    <div style="font-size:11px;color:#5b4c79;background:#f3effa;border:1px solid #dfd5f5;padding:8px 10px;border-radius:10px;margin-bottom:12px;line-height:1.45;text-align:left;">
+      💡 <b>Aturan Penilaian:</b> Papan nilai hanya menghitung <b>nilai percobaan pertama</b>. Percobaan berikutnya dihitung sebagai sarana latihan (drill).
+    </div>
+    <table class="scoreTable">
+      <thead>
+        <tr>
+          <th>Ranking</th>
+          <th>Nama (Kelas)</th>
+          <th>Poin Resmi</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${officialList.map((r,i)=>`
+          <tr>
+            <td>${i+1}</td>
+            <td>
+              ${escapeHTML(r.name + (r.className ? ` (${r.className})` : ''))}
+              ${r.drillCount > 1 ? `<span style="display:inline-block;margin-left:5px;font-size:10px;background:#e9f6ec;color:#1b7340;border:1px solid #c2e8cb;padding:1px 5px;border-radius:6px;font-weight:700;">Latihan ${r.drillCount}x</span>` : ''}
+            </td>
+            <td>${formatScore(r.score)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
 }
 
 function formatScore(x){return Number.isInteger(Number(x))?String(Number(x)):Number(x).toFixed(2).replace(/0+$/,'').replace(/\.$/,'');}
@@ -616,10 +692,10 @@ function closeScores(){document.getElementById('scoreOverlay').classList.remove(
 let latestCloudScores = [];
 
 async function downloadScoresCsv(){
-  let dataToExport = latestCloudScores;
-  if(!dataToExport || !dataToExport.length){
+  let rawData = latestCloudScores;
+  if(!rawData || !rawData.length){
     try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=score.desc,created_at.asc`, {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/scores?select=*&order=created_at.asc`, {
         method: 'GET',
         headers: {
           'apikey': SUPABASE_KEY,
@@ -629,15 +705,16 @@ async function downloadScoresCsv(){
       if(res.ok){
         const data = await res.json();
         if(Array.isArray(data) && data.length > 0){
-          dataToExport = data;
+          rawData = data;
+          latestCloudScores = data;
         }
       }
     }catch(e){}
   }
   
-  if(!dataToExport || !dataToExport.length){
+  if(!rawData || !rawData.length){
     // Fallback ke localStorage
-    dataToExport = getScores().map(r => ({
+    rawData = getScores().map(r => ({
       name: r.name,
       class_name: r.className || '',
       score: r.score,
@@ -645,27 +722,31 @@ async function downloadScoresCsv(){
     }));
   }
 
-  if(!dataToExport || !dataToExport.length){
+  if(!rawData || !rawData.length){
     alert('Belum ada data nilai untuk diunduh.');
     return;
   }
 
-  // Buat file HTML Excel (.xls) berformat tabel rapi dengan garis border, background header, dan kolom teratur
+  // Saring HANYA percobaan pertama siswa untuk rekap resmi guru
+  const officialList = getFirstAttempts(rawData);
+
   let tableRows = '';
-  dataToExport.forEach((r, idx) => {
+  officialList.forEach((r, idx) => {
     let tgl = '';
     try {
       tgl = new Date(r.created_at).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
     } catch(err){
       tgl = r.created_at || '';
     }
+    const drillInfo = r.drillCount > 1 ? `${r.drillCount}x (1x Ujian Resmi + ${r.drillCount - 1}x Latihan)` : '1x (Hanya Ujian Resmi)';
     tableRows += `
       <tr style="text-align:left;">
-        <td style="border:1px solid #999;text-align:center;padding:6px;">${idx + 1}</td>
-        <td style="border:1px solid #999;padding:6px;">${escapeHTML(r.name || '')}</td>
-        <td style="border:1px solid #999;text-align:center;padding:6px;">${escapeHTML(r.class_name || '')}</td>
-        <td style="border:1px solid #999;text-align:center;font-weight:bold;padding:6px;">${formatScore(r.score)}</td>
-        <td style="border:1px solid #999;text-align:center;padding:6px;">${tgl}</td>
+        <td style="border:1px solid #999;text-align:center;padding:7px;">${idx + 1}</td>
+        <td style="border:1px solid #999;padding:7px;font-weight:bold;">${escapeHTML(r.name || '')}</td>
+        <td style="border:1px solid #999;text-align:center;padding:7px;">${escapeHTML(r.className || '')}</td>
+        <td style="border:1px solid #999;text-align:center;font-weight:bold;color:#198754;font-size:12pt;padding:7px;">${formatScore(r.score)}</td>
+        <td style="border:1px solid #999;text-align:center;padding:7px;">${tgl}</td>
+        <td style="border:1px solid #999;text-align:center;padding:7px;">${drillInfo}</td>
       </tr>`;
   });
 
@@ -677,19 +758,22 @@ async function downloadScoresCsv(){
       table { border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 11pt; }
       th { background-color: #6c4ccf; color: #ffffff; border: 1px solid #5535b0; padding: 10px; text-align: center; }
       td { border: 1px solid #cccccc; padding: 8px; }
-      .title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 15px; color: #242038; }
+      .title { font-size: 16pt; font-weight: bold; text-align: center; margin-bottom: 6px; color: #242038; }
+      .subtitle { font-size: 10pt; text-align: center; margin-bottom: 15px; color: #555555; }
     </style>
   </head>
   <body>
-    <div class="title">REKAPITULASI NILAI ASESMEN FLIP BOX TRIGONOMETRI</div>
+    <div class="title">REKAPITULASI RESMI ASESMEN FLIP BOX TRIGONOMETRI</div>
+    <div class="subtitle">Catatan: Nilai resmi murni dihitung dari <b>percobaan pertama</b> setiap siswa. Kolom aktivitas latihan mencatat frekuensi drill siswa.</div>
     <table>
       <thead>
         <tr>
           <th style="width:70px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Ranking</th>
           <th style="width:250px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Nama Siswa</th>
           <th style="width:120px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Kelas</th>
-          <th style="width:100px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Nilai</th>
-          <th style="width:220px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Tanggal & Waktu Pengisian</th>
+          <th style="width:120px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Nilai Resmi (Percobaan ke-1)</th>
+          <th style="width:220px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Waktu Pengerjaan Pertama</th>
+          <th style="width:250px;background:#6c4ccf;color:#fff;border:1px solid #5535b0;">Total Latihan (Drill)</th>
         </tr>
       </thead>
       <tbody>
@@ -704,7 +788,7 @@ async function downloadScoresCsv(){
   const a = document.createElement('a');
   const now = new Date().toISOString().slice(0, 10);
   a.href = url;
-  a.download = `Rekap_Nilai_Trigonometri_${now}.xls`;
+  a.download = `Rekap_Nilai_Resmi_Trigonometri_${now}.xls`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -915,11 +999,27 @@ function endGame(){
   }else{
     score=Math.min(98, Math.round((base+bonus)*100)/100);
   }
+
+  const attemptInfo = checkStudentPreviousAttempt(studentName, studentClass);
   saveScore(score);
+
   document.getElementById('finishName').textContent=studentName+' • '+studentClass;
   document.getElementById('finalScore').textContent=formatScore(score);
   document.getElementById('circle').style.setProperty('--p',score+'%');
-  document.getElementById('breakdown').innerHTML=`Jawaban benar: <b>${correct}/16</b><br>Nilai dasar: <b>${base.toFixed(2)}</b><br>Bonus streak: <b>+${bonus.toFixed(1)}</b> poin (maks. 5.0)<br>Nilai akhir: <b>${formatScore(score)}/100</b>${correct<16?' <br><small>Nilai maksimal 98 jika masih ada jawaban yang salah.</small>':''}`;
+
+  let attemptBanner = '';
+  if(attemptInfo.isFirst){
+    attemptBanner = `<div style="background:#eafaf1;border:1px solid #b7ebd0;color:#156938;padding:9px 12px;border-radius:12px;font-size:12px;margin:12px 0 10px;line-height:1.5;text-align:left;">`
+      + `<b>✓ Nilai Resmi Tercatat (Percobaan ke-1)</b><br>Nilai ini tersimpan sebagai nilai resmi kuis kamu. Kamu bebas bermain lagi untuk berlatih (drill)!`
+      + `</div>`;
+  } else {
+    attemptBanner = `<div style="background:#f4f0ff;border:1px solid #dcd1f7;color:#5538a7;padding:9px 12px;border-radius:12px;font-size:12px;margin:12px 0 10px;line-height:1.5;text-align:left;">`
+      + `<b>🎯 Sesi Latihan/Drill ke-${attemptInfo.attemptNumber} Selesai!</b><br>Nilai resmi asesmen kamu tetap dihitung dari <b>percobaan pertama (${formatScore(attemptInfo.firstScore)})</b>. Hebat, terus asah kemampuanmu!`
+      + `</div>`;
+  }
+
+  document.getElementById('breakdown').innerHTML=attemptBanner
+    + `Jawaban benar: <b>${correct}/16</b><br>Nilai dasar: <b>${base.toFixed(2)}</b><br>Bonus streak: <b>+${bonus.toFixed(1)}</b> poin (maks. 5.0)<br>Nilai sesi ini: <b>${formatScore(score)}/100</b>${correct<16?' <br><small>Nilai maksimal 98 jika masih ada jawaban yang salah.</small>':''}`;
 }
 
 let confirmAction=null;
