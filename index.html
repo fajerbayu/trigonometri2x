@@ -303,6 +303,14 @@ body.review-mode .card:not(.done){
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style id="gamification-styles">
+.lifelineBtn{border:1.5px solid #7253ce !important;background:#f4efff !important;color:#5939b7 !important;font-weight:850 !important;font-size:11px !important;padding:5px 12px !important;border-radius:99px !important;cursor:pointer !important;display:inline-flex !important;align-items:center !important;gap:4px !important;box-shadow:0 2px 6px rgba(114,83,206,.15) !important;transition:all .2s ease !important}
+.lifelineBtn:hover:not(:disabled){background:#6c4ccf !important;color:#fff !important;transform:translateY(-1px) !important}
+.lifelineBtn:disabled{opacity:.4 !important;cursor:not-allowed !important;border-color:#d1c8e6 !important;background:#eeeaf5 !important;color:#8c82a3 !important;box-shadow:none !important;transform:none !important}
+.opt.eliminated{opacity:.28 !important;text-decoration:line-through !important;pointer-events:none !important;background:#f5f4f8 !important;border-color:#dedbe6 !important;cursor:not-allowed !important;transform:scale(0.97) !important}
+.pairToast{position:fixed !important;top:24px !important;left:50% !important;transform:translateX(-50%) translateY(-50px) !important;background:linear-gradient(135deg,#2c1f54,#6c4ccf) !important;color:#fff !important;padding:14px 24px !important;border-radius:20px !important;box-shadow:0 12px 35px rgba(0,0,0,.45) !important;border:1.5px solid rgba(255,255,255,.35) !important;font-size:14px !important;text-align:center !important;z-index:9999999 !important;opacity:0 !important;pointer-events:none !important;transition:all .35s cubic-bezier(0.175,0.885,0.32,1.275) !important}
+.pairToast.show{opacity:1 !important;transform:translateX(-50%) translateY(0) !important}
+</style>
 </head>
 <body><div class="phone">
 <section class="startScreen" id="startScreen"><div class="topMenuActions"><button class="learningBtn" id="learningBtn">Tujuan Pembelajaran</button><button class="scoreBtn" id="scoreBtn">🏆 Lihat Nilai</button></div><div class="startIcon flipLogo"><svg class="flipLogoSvg" viewBox="0 0 120 96" aria-hidden="true">
@@ -371,7 +379,7 @@ body.review-mode .card:not(.done){
 <!-- gerak flip -->
 <path d="M54 28c5-5 8-6 13-6" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round"/>
 <path d="M62 17l6 5-7 3" fill="none" stroke="#7b59c9" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-</svg><span>Flip Box Trigonometri</span></div><div class="sub">Bangun streak jawaban benar!</div><div class="participantTag" id="participantTag"></div></div><div class="timer" id="timer">30:00</div></div><div class="stats"><div class="stat">Selesai<b id="done">0/16</b></div><div class="stat">Benar<b id="correct">0</b></div><div class="stat">Streak<b id="bonus">+0.0</b></div><div class="stat">Bantuan<b id="statLifeline">🎯 0</b></div></div></header>
+</svg><span>Flip Box Trigonometri</span></div><div class="sub">Bangun streak jawaban benar!</div><div class="participantTag" id="participantTag"></div></div><div class="timer" id="timer">30:00</div></div><div class="stats"><div class="stat">Selesai<b id="done">0/16</b></div><div class="stat">Benar<b id="correct">0</b></div><div class="stat">Streak<b id="bonus">+0.0</b></div><div class="stat">Bantuan<b id="statLifeline">0</b></div></div></header>
 <main id="game"><div class="note"><b>Aturan:</b> klik kartu lalu jawab soal. Benar beruntun memberi <b>bonus streak +0,5 poin</b> (maks. +5 poin). Pasangan buah cocok & benar memberi <b>1 Bantuan 50:50</b>.</div><div class="grid" id="grid"></div><div class="gameNav"><button id="menuBtn" class="gameNavBtn secondary">Menu Utama</button><button id="finishEarlyBtn" class="gameNavBtn primary">Selesai</button></div></main>
 <section class="finish" id="finish"><div style="font-size:55px">🏆</div><h2>Asesmen Selesai!</h2><div class="finishName" id="finishName"></div><p>Nilai akhir kamu:</p><div class="scoreCircle" id="circle" style="--p:0%"><span id="finalScore">0</span></div><div class="break" id="breakdown"></div><div class="finishActions"><button class="restart reviewBtn" id="reviewFlipBtn">Kembali</button><button class="restart" id="restartBtn">Menu Utama</button></div></section>
 </div></div>
@@ -392,7 +400,7 @@ body.review-mode .card:not(.done){
   </div>
 </div>
 <div class="scoreOverlay" id="scoreOverlay"><div class="scoreModal"><div class="scoreModalHead"><h3>🏆 Nilai Siswa</h3><button class="closeScore" id="closeScore" aria-label="Tutup">×</button></div><div id="scoreList"></div><div class="scoreActionsGrid"><button class="downloadScores" id="downloadScores">📥 Unduh Excel (.csv)</button><button class="resetScores" id="resetScores">Reset Nilai</button></div></div></div>
-<div class="overlay" id="overlay"><div class="modal"><div class="qhead"><span class="badge" id="qnum">Soal</span><div style="display:flex;gap:6px;align-items:center"><button type="button" class="lifelineBtn" id="use5050Btn" title="Gunakan Bantuan 50:50">🎯 50:50 (<span id="lifelineCount">0</span>)</button><span class="badge" id="fruitBadge">🍎</span></div></div><div class="qimage" id="qimage"></div><div class="question" id="question"></div><div class="options" id="options"></div><div class="explain" id="explain"></div><button class="next" id="next">Lanjutkan</button></div></div>
+<div class="overlay" id="overlay"><div class="modal"><div class="qhead"><span class="badge" id="qnum">Soal</span><div style="display:flex;gap:6px;align-items:center"><button type="button" class="lifelineBtn" id="use5050Btn" title="Gunakan Bantuan">Bantuan (<span id="lifelineCount">0</span>)</button><span class="badge" id="fruitBadge">🍎</span></div></div><div class="qimage" id="qimage"></div><div class="question" id="question"></div><div class="options" id="options"></div><div class="explain" id="explain"></div><button class="next" id="next">Lanjutkan</button></div></div>
 <script>
 // Sound effects embedded directly in this HTML so the game stays portable.
 const SOUND_DATA = {
@@ -453,12 +461,12 @@ let opened=[], done=0, correct=0, bonus=0, streak=0, lifelines5050=0, pendingCar
 
 function updateLifelineUI(){
   const statEl=document.getElementById('statLifeline');
-  if(statEl) statEl.textContent='🎯 '+lifelines5050;
+  if(statEl) statEl.textContent=String(lifelines5050);
   const countEl=document.getElementById('lifelineCount');
-  if(countEl) countEl.textContent=lifelines5050;
+  if(countEl) countEl.textContent=String(lifelines5050);
   const btn=document.getElementById('use5050Btn');
   if(btn){
-    if(pendingCard!==null){
+    if(pendingCard!==null && deck[pendingCard]){
       const c=deck[pendingCard];
       btn.disabled=lifelines5050<=0 || c.used5050 || c.done || document.body.classList.contains('review-mode');
     } else {
@@ -468,7 +476,7 @@ function updateLifelineUI(){
 }
 
 function showPairRewardToast(fruit){
-  playSound('correct');
+  try { playSound('correct'); } catch(e){}
   let toast=document.getElementById('pairToast');
   if(!toast){
     toast=document.createElement('div');
@@ -476,9 +484,11 @@ function showPairRewardToast(fruit){
     toast.className='pairToast';
     document.body.appendChild(toast);
   }
-  toast.innerHTML=`<span style="font-size:22px">${fruit}</span> <b>Perfect Match!</b><br><small>Dapat 1 Bantuan 50:50! 🎯</small>`;
+  toast.innerHTML=`<span style="font-size:24px;vertical-align:middle;margin-right:6px">${fruit}</span><b>Pasangan Buah Cocok!</b><br><span style="font-size:12px;opacity:.95">Kamu mendapatkan <b>+1 Bantuan</b></span>`;
   toast.classList.add('show');
-  setTimeout(()=>toast.classList.remove('show'),2500);
+  setTimeout(()=>{
+    toast.classList.remove('show');
+  }, 2600);
 }
 
 function use5050(i){
@@ -487,10 +497,12 @@ function use5050(i){
   c.used5050=true;
   lifelines5050--;
   updateLifelineUI();
-  playSound('click');
+  try { playSound('click'); } catch(e){}
 
   let wrongIndices=[];
-  c.q.o.forEach((_,idx)=>{if(idx!==c.q.a) wrongIndices.push(idx);});
+  c.q.o.forEach((_,idx)=>{
+    if(idx!==c.q.a) wrongIndices.push(idx);
+  });
   let shuffled=shuffleArray(wrongIndices);
   c.eliminatedOpts=shuffled.slice(0,2);
 
@@ -740,9 +752,30 @@ async function executeResetScores(){
   if(host) host.innerHTML = '<div class="emptyScores">Belum ada nilai siswa yang tersimpan.</div>';
 }
 
-function render(){grid.innerHTML='';deck.forEach((c,i)=>{let d=document.createElement('div');let resultClass=c.done?(c.answered===c.q.a?' answer-correct':' answer-wrong'):'';d.className='card'+(opened.includes(i)?' flipped':'')+(c.matched?' matched':'')+(c.done?' done':'')+resultClass;d.innerHTML=`<div class="inner"><div class="face front">?</div><div class="face back">${c.fruit}</div></div>`;d.onpointerdown=()=>playSound('click');d.onclick=()=>pick(i);grid.appendChild(d)});}
-function pick(i){let c=deck[i];if(finished&&!document.body.classList.contains('review-mode'))return;if(c.done){showQuestion(i,true);return;}if(document.body.classList.contains('review-mode'))return;if(opened.includes(i)||opened.length>=2)return;pendingCard=i;showQuestion(i,false);}
+function render(){
+  grid.innerHTML='';
+  deck.forEach((c,i)=>{
+    let d=document.createElement('div');
+    let resultClass=c.done?(c.answered===c.q.a?' answer-correct':' answer-wrong'):'';
+    d.className='card'+(c.matched?' matched':'')+(c.done?' done':'')+resultClass;
+    d.innerHTML=`<div class="inner"><div class="face front">?</div><div class="face back">${c.fruit}</div></div>`;
+    d.onpointerdown=()=>playSound('click');
+    d.onclick=()=>pick(i);
+    grid.appendChild(d);
+  });
+}
+
+function pick(i){
+  let c=deck[i];
+  if(finished&&!document.body.classList.contains('review-mode')) return;
+  if(c.done){ showQuestion(i,true); return; }
+  if(document.body.classList.contains('review-mode')) return;
+  pendingCard=i;
+  showQuestion(i,false);
+}
+
 function showQuestion(i,review=false){
+  pendingCard=i;
   let c=deck[i],ov=document.getElementById('overlay');
   document.getElementById('qnum').textContent=`Soal ${c.q.id}${review?' • Sudah dikerjakan':` • ${done+1}/16`}`;
   let back=document.getElementById('fruitBadge');
@@ -752,6 +785,7 @@ function showQuestion(i,review=false){
   let qi=document.getElementById('qimage');
   if(c.q.img){qi.innerHTML=c.q.img;qi.style.display='block';}else{qi.innerHTML='';qi.style.display='none';}
   document.getElementById('question').innerHTML=c.q.q;
+  
   let btn5050=document.getElementById('use5050Btn');
   if(btn5050){
     if(review || c.done){
@@ -762,6 +796,7 @@ function showQuestion(i,review=false){
       btn5050.onclick=()=>use5050(i);
     }
   }
+
   let opts=document.getElementById('options');
   opts.innerHTML='';
   let ex=document.getElementById('explain');
@@ -786,7 +821,13 @@ function showQuestion(i,review=false){
   updateLifelineUI();
   ov.classList.add('show');
 }
-function closeQuestion(){document.getElementById('overlay').classList.remove('show');pendingCard=null;}
+
+function closeQuestion(){
+  document.getElementById('overlay').classList.remove('show');
+  pendingCard=null;
+  updateLifelineUI();
+}
+
 function answer(j,b,i){
   let c=deck[i];
   c.answered=j;
@@ -813,21 +854,29 @@ function answer(j,b,i){
   nx.onclick=()=>completeCard(i);
   updateLifelineUI();
 }
-function completeCard(i){document.getElementById('overlay').classList.remove('show');let c=deck[i];c.done=true;done++;opened.push(i);document.getElementById('done').textContent=done+'/16';render();if(opened.length===2){setTimeout(checkPair,650);}if(done===16 && opened.length<2)setTimeout(endGame,500);}
-function checkPair(){
-  let [a,b]=opened;
-  if(deck[a].fruit===deck[b].fruit){
-    deck[a].matched=deck[b].matched=true;
-    if(deck[a].answered===deck[a].q.a && deck[b].answered===deck[b].q.a){
-      lifelines5050++;
-      updateLifelineUI();
-      showPairRewardToast(deck[a].fruit);
-    }
+
+function completeCard(i){
+  document.getElementById('overlay').classList.remove('show');
+  pendingCard=null;
+  let c=deck[i];
+  c.done=true;
+  done++;
+  document.getElementById('done').textContent=done+'/16';
+
+  // Otomatis pasangkan bila ada kartu lain yang sudah dibuka dengan buah yang sama dan belum berpasangan
+  let pairCard=deck.find(other => other.i !== i && other.done && !other.matched && other.fruit === c.fruit);
+  if(pairCard){
+    c.matched=true;
+    pairCard.matched=true;
+    lifelines5050++;
+    updateLifelineUI();
+    showPairRewardToast(c.fruit);
   }
-  opened=[];
+
   render();
-  if(done===16)setTimeout(endGame,500);
+  if(done===16) setTimeout(endGame, 500);
 }
+
 function endGame(){
   if(finished)return;
   finished=true;
